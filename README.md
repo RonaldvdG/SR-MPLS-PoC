@@ -83,5 +83,19 @@ For the scenario with an SR-Aware function:
 +----------------------------+
 ```
 
+## Configurations
+This GitHub provides the configurations for the Routers, the Proxy, the internet and the used iptables rule for the firewall.
+
+The configurations for the Routers and the Proxy were succesfully tested on JunOS vMX 18.2R1.9 devices, we do not claim that this same configuration will work for other devices. 
+
+### Internet
+For simulating the internet, we used an Ubuntu 18.04 Virtual Machine where we made use of two Docker containers (https://hub.docker.com/r/mslotboom/app8080 and https://hub.docker.com/r/mslotboom/app8181). 
+
+### Institute
+As Institute we also made use of an Ubuntu 18.04 Virtual Machine. The Institute did nothing else but retrieving the webpages served by the simulated Internet.
+
+### Firewall
+Also the Firewall was an Ubuntu 18.04 machine. This Firewall enabled IPv4 Forwarding and blocked the traffic with destination port 8181.
+
 # Licence
 These files are free to use! :)
