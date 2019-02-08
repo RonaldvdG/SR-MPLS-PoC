@@ -1,0 +1,102 @@
+Instance: Proxy1
+
+set version 18.2R1.9
+set system host-name Proxy1
+
+### The settings below different per setup and not nessecarry.
+set system static-host-mapping R1 inet 10.0.0.1
+set system static-host-mapping R2 inet 10.0.0.2
+set system static-host-mapping R3 inet 10.0.0.3
+set system static-host-mapping Proxy inet 10.0.0.4
+set system static-host-mapping Internet inet 10.0.10.10
+set system static-host-mapping R1-Internet inet 10.0.10.1
+set system static-host-mapping Institute inet 10.0.20.10
+set system static-host-mapping R2-Institute inet 10.0.20.1
+set system static-host-mapping R1-R2 inet 10.0.12.1
+set system static-host-mapping R2-R1 inet 10.0.12.2
+set system static-host-mapping R1-R3 inet 10.0.13.1
+set system static-host-mapping R3-R1 inet 10.0.13.2
+set system static-host-mapping R2-R3 inet 10.0.23.1
+set system static-host-mapping R3-R2 inet 10.0.23.2
+set system static-host-mapping R3-Proxy inet 10.0.34.1
+set system static-host-mapping Proxy-R3 inet 10.0.34.2
+set system static-host-mapping Proxy-Firewall inet 10.0.40.1
+set system static-host-mapping Firewall inet 10.0.40.11
+###
+
+set system services ssh root-login allow
+set system services netconf ssh
+set system syslog user * any emergency
+set system syslog file messages any notice
+set system syslog file messages authorization info
+set system syslog file interactive-commands interactive-commands any
+set chassis fpc 0 lite-mode
+
+### Enabling enhanced-ip voor Segment Routing functionality
+set chassis network-services enhanced-ip
+
+### Defining the used protocols and IP addresses per port
+set interfaces ge-0/0/0 unit 0 family inet filter input 0-1
+set interfaces ge-0/0/0 unit 0 family inet address 10.0.34.2/30
+set interfaces ge-0/0/0 unit 0 family iso
+set interfaces ge-0/0/0 unit 0 family mpls
+set interfaces ge-0/0/1 unit 0 family inet address 10.0.40.1/24
+set interfaces fxp0 unit 0 family inet address 192.168.122.235/24
+set interfaces lo0 unit 0 family inet address 10.0.0.4/32
+set interfaces lo0 unit 0 family iso address 49.0002.0010.0000.0004.00
+set interfaces lo0 unit 0 family mpls
+
+### Routing options
+##### The static route below is not nessecarry. In our setup this was for management only
+set routing-options static route 0.0.0.0/0 next-hop 192.168.122.1
+##### Static route nessecarry for reaching the firewall
+set routing-options static route 10.0.40.0/24 next-hop 10.0.40.1
+###
+
+set routing-options router-id 10.0.0.4
+set routing-options autonomous-system 65000
+
+### Setting the MPLS paramters
+set protocols mpls icmp-tunneling
+set protocols mpls interface ge-0/0/0.0
+set protocols mpls interface lo0.0
+set protocols mpls label-range static-label-range 1000000 1000999
+
+### Setting the BGP paramters
+set protocols bgp group internal-bgp type internal
+set protocols bgp group internal-bgp local-address 10.0.0.4
+set protocols bgp group internal-bgp export send-direct
+set protocols bgp group internal-bgp neighbor 10.0.0.1
+set protocols bgp group internal-bgp neighbor 10.0.0.2
+
+### Setting the IS-IS paramters
+set protocols isis source-packet-routing srgb start-label 1000
+set protocols isis source-packet-routing srgb index-range 9000
+set protocols isis source-packet-routing node-segment ipv4-index 4
+set protocols isis level 1 disable
+set protocols isis interface ge-0/0/0.0
+set protocols isis interface lo0.0 passive
+
+### Defining the segment routing lists
+set protocols source-packet-routing sr-preference-override 300
+set protocols source-packet-routing sr-preference 200
+set protocols source-packet-routing segment-list prox-inst hop-1 label 1003
+set protocols source-packet-routing segment-list prox-inst hop-1 ip-address 10.0.34.1
+set protocols source-packet-routing segment-list prox-inst hop-2 label 1002
+set protocols source-packet-routing segment-list prox-www hop-1 label 1003
+set protocols source-packet-routing segment-list prox-www hop-1 ip-address 10.0.34.1
+set protocols source-packet-routing segment-list prox-www hop-2 label 1001
+set protocols source-packet-routing source-routing-path lsp-prox-inst to 10.0.0.2
+set protocols source-packet-routing source-routing-path lsp-prox-inst binding-sid 1000042
+set protocols source-packet-routing source-routing-path lsp-prox-inst primary prox-inst
+set protocols source-packet-routing source-routing-path lsp-prox-www to 10.0.0.1
+set protocols source-packet-routing source-routing-path lsp-prox-www binding-sid 1000041
+set protocols source-packet-routing source-routing-path lsp-prox-www primary prox-www
+
+### Redistributing the direct routes to BGP
+set policy-options policy-statement send-direct term 2 from protocol direct
+set policy-options policy-statement send-direct term 2 then accept
+
+### Forwarding traffic from ge-0/0/0 to ge-0/0/1 (firewall)
+set firewall filter 0-1 term 01 from interface ge-0/0/0
+set firewall filter 0-1 term 01 then next-ip 10.0.40.11/32
