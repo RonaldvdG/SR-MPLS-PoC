@@ -89,7 +89,7 @@ This GitHub provides the configurations for the Routers, the Proxy, the internet
 The configurations for the Routers and the Proxy were succesfully tested on JunOS vMX 18.2R1.9 devices, we do not claim that this same configuration will work for other devices. 
 
 ### Internet
-For simulating the internet, we used an Ubuntu 18.04 Virtual Machine where we made use of two Docker containers (For both [port 8080](https://hub.docker.com/r/mslotboom/app8080) and [port 8181](https://hub.docker.com/r/mslotboom/app8181)). 
+For simulating the internet, we used an Ubuntu 18.04 Virtual Machine where we made use of two Docker containers (for both [port 8080](https://hub.docker.com/r/mslotboom/app8080) and [port 8181](https://hub.docker.com/r/mslotboom/app8181)). 
 
 ### Institute
 As Institute we also made use of an Ubuntu 18.04 Virtual Machine. The Institute did nothing else but retrieving the webpages served by the simulated Internet.
